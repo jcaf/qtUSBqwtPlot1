@@ -72,6 +72,10 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_autoscale_clicked();
+
+    void on_generator_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 

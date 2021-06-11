@@ -78,7 +78,7 @@
    <widget class="QTextEdit" name="posicion">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>120</y>
       <width>91</width>
       <height>41</height>
@@ -95,31 +95,18 @@ p, li { white-space: pre-wrap; }
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>170</y>
+      <x>50</x>
+      <y>280</y>
       <width>151</width>
       <height>131</height>
      </rect>
     </property>
     <property name="title">
-     <string/>
+     <string>CAPTURA</string>
     </property>
     <property name="flat">
      <bool>false</bool>
     </property>
-    <widget class="QLabel" name="label_4">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>10</y>
-       <width>71</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>CAPTURAR</string>
-     </property>
-    </widget>
     <widget class="QWidget" name="gridLayoutWidget">
      <property name="geometry">
       <rect>
@@ -174,7 +161,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>40</x>
       <y>100</y>
       <width>131</width>
       <height>17</height>
@@ -184,193 +171,141 @@ p, li { white-space: pre-wrap; }
      <string>Posición(metros)</string>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBox_2">
+   <widget class="QGroupBox" name="Datos">
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>310</y>
-      <width>151</width>
-      <height>311</height>
+      <y>440</y>
+      <width>201</width>
+      <height>181</height>
      </rect>
     </property>
     <property name="title">
-     <string/>
+     <string>DATOS</string>
     </property>
-    <widget class="QLabel" name="label_3">
+    <widget class="QPushButton" name="borrar">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>71</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>INTERVALO</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>200</y>
-       <width>51</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>INICIO</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="geometry">
-      <rect>
-       <x>70</x>
-       <y>200</y>
+       <x>60</x>
+       <y>140</y>
        <width>61</width>
        <height>25</height>
       </rect>
      </property>
      <property name="text">
-      <string>PAUSA</string>
+      <string>BORRAR</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_3">
+    <widget class="QPushButton" name="captura1">
      <property name="geometry">
       <rect>
-       <x>40</x>
-       <y>240</y>
-       <width>61</width>
+       <x>50</x>
+       <y>60</y>
+       <width>83</width>
        <height>25</height>
       </rect>
      </property>
      <property name="text">
-      <string>RESET</string>
+      <string>CAPTURA 1</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_4">
+    <widget class="QPushButton" name="captura2">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>280</y>
-       <width>91</width>
+       <x>50</x>
+       <y>100</y>
+       <width>83</width>
        <height>25</height>
       </rect>
      </property>
      <property name="text">
-      <string>EXPORTAR</string>
+      <string>CAPTURA 2</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_5">
+    <widget class="QCheckBox" name="amplificarx10">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>81</width>
-       <height>17</height>
+       <x>50</x>
+       <y>30</y>
+       <width>121</width>
+       <height>23</height>
       </rect>
      </property>
      <property name="text">
-      <string>RECORRIDO</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="recorrido">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>120</y>
-       <width>101</width>
-       <height>26</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>DejaVu Sans</family>
-       <pointsize>14</pointsize>
-      </font>
-     </property>
-     <property name="maximum">
-      <double>150.000000000000000</double>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="intervalo">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>50</y>
-       <width>101</width>
-       <height>26</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>DejaVu Sans</family>
-       <pointsize>14</pointsize>
-      </font>
-     </property>
-     <property name="maximum">
-      <double>150.000000000000000</double>
+      <string>Amplificar (x10)</string>
      </property>
     </widget>
    </widget>
-   <widget class="QTextEdit" name="mv2_current">
+   <widget class="QTextEdit" name="current">
     <property name="geometry">
      <rect>
-      <x>840</x>
-      <y>70</y>
+      <x>50</x>
+      <y>190</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="html">
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;0.00&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>170</y>
+      <width>101</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Corriente (mA)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="exportar">
+    <property name="geometry">
+     <rect>
+      <x>1160</x>
+      <y>50</y>
+      <width>83</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>EXPORTAR</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="autoscale">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>120</y>
       <width>71</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="html">
-     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;0.00&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-    </property>
-   </widget>
-   <widget class="QTextEdit" name="mv3_current">
-    <property name="geometry">
-     <rect>
-      <x>1200</x>
-      <y>70</y>
-      <width>61</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="html">
-     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;0.00&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>910</x>
-      <y>80</y>
-      <width>21</width>
-      <height>17</height>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>mA</string>
+     <string>Autoscale</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_7">
+   <widget class="QPushButton" name="generator">
     <property name="geometry">
      <rect>
-      <x>1260</x>
-      <y>80</y>
-      <width>21</width>
-      <height>17</height>
+      <x>170</x>
+      <y>190</y>
+      <width>83</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>mA</string>
+     <string>Generator</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>

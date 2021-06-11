@@ -167,8 +167,8 @@ MainWindow::MainWindow(QWidget *parent)
     file2export();
     //
     ui->posicion->setFontPointSize(14);
-    ui->mv2_current->setFontPointSize(12);
-    ui->mv3_current->setFontPointSize(12);
+    ui->current->setFontPointSize(14);
+
 
     //code for the led widget
     led_capture_mv1 = new LedIndicator();
@@ -178,6 +178,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->gridLayoutLedsCapture->addWidget(led_capture_mv2,2,0);
     ui->gridLayoutLedsCapture->addWidget(led_capture_mv3,3,0);
 
+    //coloring background
+    QPalette pal = ui->generator->palette();
+    pal.setColor(QPalette::Button, QColor(Qt::gray));
+    ui->generator->setAutoFillBackground(true);
+    ui->generator->setPalette(pal);
+    ui->generator->update();
+    //
 
 }
 
@@ -197,7 +204,8 @@ MainWindow::~MainWindow()
  */
 
 QString str_acc = "";
-float recorrido = 0;
+//float recorrido = 0;
+float posicion = 0;
 float mv1 = 0;  //el uC envia en milivoltios, con 2 decimales
 float mv2 = 0;  //el uC envia en milivoltios, con 2 decimales
 float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
@@ -207,20 +215,24 @@ float mv3_current = 0;  //el uC envia en miliamperios, con 2 decimales
 #define USB_DATACODE_MV1 'X'
 #define USB_DATACODE_MV2 'Y'
 #define USB_DATACODE_MV3 'Z'
-#define USB_DATACODE_MV2CURRENT 'B'
-#define USB_DATACODE_MV3CURRENT 'C'
-#define USB_DATACODE_RECORRIDO 'R'
+#define USB_DATACODE_CURRENT 'C'
+#define USB_DATACODE_POSICION 'P'
 //
-#define USB_DATACODE_START 'S'
-#define USB_DATACODE_PAUSE 'P'
-#define USB_DATACODE_RESET 'R'
-#define USB_DATACODE_INTERVALO 'I'
-#define USB_DATACODE_MODE_INTERVALO_METERS 'M'
-#define USB_DATACODE_MODE_INTERVALO_TIME 'T'
-//
+#define USB_DATACODE_CAPTURA1_ON 'A'
+#define USB_DATACODE_CAPTURA1_OFF 'B'
+#define USB_DATACODE_CAPTURA2_ON 'D'
+#define USB_DATACODE_CAPTURA2_OFF 'E'
 
-#define TOKEN_BEGIN '@'
-#define TOKEN_END '\r'
+#define USB_DATACODE_AMPLIFICARx10_ON 'F'
+#define USB_DATACODE_AMPLIFICARx10_OFF 'G'
+
+#define USB_DATACODE_OUT1_ON 'H'
+#define USB_DATACODE_OUT1_OFF 'I'
+#define USB_DATACODE_OUT2_ON 'J'
+#define USB_DATACODE_OUT2_OFF 'K'
+
+#define USB_DATACODE_TOKEN_BEGIN '@'
+#define USB_DATACODE_TOKEN_END '\r'
 
 void MainWindow::readSerial()
 {
@@ -246,7 +258,7 @@ void MainWindow::readSerial()
         c =  Cstr[i];
         if (sm0 == 0)
         {
-            if ( c == TOKEN_BEGIN)
+            if ( c == USB_DATACODE_TOKEN_BEGIN)
             {
                 USB_payload_idx = 0;
                 sm0++;
@@ -259,7 +271,7 @@ void MainWindow::readSerial()
         }
         else if (sm0 == 2)//storage payload
         {
-            if (c == TOKEN_END)
+            if (c == USB_DATACODE_TOKEN_END)
             {
                 USB_payload_char[USB_payload_idx] = '\0';
                 //
@@ -280,204 +292,82 @@ void MainWindow::readSerial()
 
         switch (USB_DATACODE)
         {
+
            case USB_DATACODE_MV1:
 
                 led_capture_mv1->toggle();
 
                 mv1 = payload_f;
-                *points1 << QPointF(mv1/1000.0f, recorrido);//grafica mv1 en voltios, NO milivoltios
+                *points1 << QPointF(mv1/1000.0f, posicion);//grafica mv1 en voltios, NO milivoltios
                 curve1->setSamples( *points1 );
-                stream << mv1 <<"," << recorrido;
+                stream << mv1 <<"," << posicion;
             break;
             case USB_DATACODE_MV2:
-                led_capture_mv1->toggle();
-                led_capture_mv2->toggle();
+//                led_capture_mv1->toggle();
+//                led_capture_mv2->toggle();
 
-                mv2 = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
-                *points2 << QPointF(mv2/1000.0f, recorrido);//grafica mv2 en voltios, NO milivoltios
-                curve2->setSamples( *points2 );
+//                mv2 = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
+//                *points2 << QPointF(mv2/1000.0f, recorrido);//grafica mv2 en voltios, NO milivoltios
+//                curve2->setSamples( *points2 );
              break;
             case USB_DATACODE_MV3:
-                led_capture_mv2->toggle();
-                led_capture_mv3->toggle();
+//                led_capture_mv2->toggle();
+//                led_capture_mv3->toggle();
 
-                mv3 = payload_f;
-                *points3 << QPointF(mv3/1000.0f, recorrido);//grafica mv3 en voltios, NO milivoltios
-                curve3->setSamples( *points3 );
+//                mv3 = payload_f;
+//                *points3 << QPointF(mv3/1000.0f, recorrido);//grafica mv3 en voltios, NO milivoltios
+//                curve3->setSamples( *points3 );
              break;
-            case USB_DATACODE_MV2CURRENT:
-                //mv2_current = payload_f * 1000;
-                //sprintf(str,"%.1f", mv2_current);
-                //ui->mv2_current->setText(str);
+            case USB_DATACODE_CURRENT:
+//                //mv2_current = payload_f * 1000;
+//                //sprintf(str,"%.1f", mv2_current);
+//                //ui->mv2_current->setText(str);
 
-                mv2_current = payload_f;
-                ui->mv2_current->setText(USB_payload_char);
+//                mv2_current = payload_f;
+//                ui->mv2_current->setText(USB_payload_char);
 
-                stream <<"," << mv2 <<"," << mv2_current <<","<< recorrido;
+//                stream <<"," << mv2 <<"," << mv2_current <<","<< recorrido;
              break;
-            case USB_DATACODE_MV3CURRENT:
-                //mv3_current = payload_f * 1000;
-                //sprintf(str,"%.1f", mv3_current);
-                //ui->mv3_current->setText(str);
+//            case USB_DATACODE_MV3CURRENT:
+//                //mv3_current = payload_f * 1000;
+//                //sprintf(str,"%.1f", mv3_current);
+//                //ui->mv3_current->setText(str);
 
 
-                mv3_current = payload_f;
-                ui->mv3_current->setText(USB_payload_char);
+//                mv3_current = payload_f;
+//                ui->mv3_current->setText(USB_payload_char);
 
 
-                stream <<"," << mv3 <<"," << mv3_current <<","<< recorrido << Qt::endl;
+//                stream <<"," << mv3 <<"," << mv3_current <<","<< recorrido << Qt::endl;
 
-                led_capture_mv3->toggle();
+//                led_capture_mv3->toggle();
              break;
-            case USB_DATACODE_RECORRIDO:
-                recorrido = payload_f;
+            //case USB_DATACODE_RECORRIDO:
+
+            case USB_DATACODE_POSICION:
+                //recorrido = payload_f;
+                posicion = payload_f;
                 ui->posicion->setText(USB_payload_char);
 
              break;
+
         }
     }
 }
 
-/*
-
-//Data payload: @dataASCII1,dataASCII2,..dataASCIIN\r\n
-//el final de linea es compuesto por \r\n, pero solo uso \r para detectar el final como token de cierre
-
-#define TOKEN_BEGIN '@'
-#define TOKEN_SEPARATOR ','
-#define TOKEN_END '\r'
-
-//#define RXDATA_NUM_DATOS 3 //3 datos se envian
-//#define RXDATA_NUMMAX_CHARS_EN1DATO 20  //Numero max. de caracters en 1 dato esperado
-//#define RXDATA_NUM_TOKENS RXDATA_NUM_DATOS//Numero de tokens = # de datos que se envian
-//#if (RXDATA_NUM_DATOS == 0)
-//    #error "RXDATA_PAYLOAD_MAXSIZE = 0"
-//#endif
- void MainWindow::readSerial()
-{
-    //static int counter = 0;
-//    qDebug()<< "counter:" << counter++;
-
-    QByteArray serialBuff = usbCDC->readAll();
-    QString str_payload = QString::fromStdString(serialBuff.toStdString());
-    str_acc += str_payload;//va acumulando y formando el string
-//    qDebug()<< str_acc;
-
-    char c;
-    char v[RXDATA_NUM_DATOS][RXDATA_NUMMAX_CHARS_EN1DATO];
-    int sm0;
-    int fil;
-    int col;
-    int counter_tokens = 0;
-    char kc;
-
-//    @120.1, 45, 555 \n
-//    qDebug()<<"antes de buscar: " << QString::fromStdString(Cstr) << Qt::endl;
-//    qDebug()<< "longitud"<< length << Qt::endl;
-
-    sm0 = 0;
-    fil = 0;
-    col = 0;
-    counter_tokens = 0;
-    std::string Cstr = str_acc.toStdString();
-    int length = Cstr.length();
-
-    for (int i=0; i< length; i++)
-    {
-        c =  Cstr[i];
-        //qDebug()<< i  << Qt::endl;
-        if (sm0 == 0)
-        {
-            if ( c == TOKEN_BEGIN)
-            {
-                fil = 0;
-                col = 0;
-
-                #if (RXDATA_NUM_DATOS  == 1)
-                    kc = TOKEN_END;
-                #else
-                    kc = TOKEN_SEPARATOR;
-                #endif
-
-                counter_tokens = 0;
-                sm0++;
-            }
-        }
-        else if (sm0 == 1)
-        {
-            if (c == kc)
-            {
-                v[fil][col] = '\0';
-
-                #if (RXDATA_NUM_DATOS  > 1)
-                    col = 0x0;
-                    if (++fil == RXDATA_NUM_TOKENS-1)
-                    {
-                        kc = TOKEN_END; //'\n'
-                    }
-                #endif
-
-                if (++counter_tokens == RXDATA_NUM_TOKENS)
-                {
-                    str_acc = "";
-                    sm0 = 0;
-                    break;
-                }
-            }
-            else
-            {
-                v[fil][col++] = c;
-            }
-        }
-    }
-    if (counter_tokens == RXDATA_NUM_TOKENS)
-    {
-        counter_tokens = 0x00;
-
-        //specific application
-        meters = atof(&v[0][0]);
-        volts = atof(&v[1][0]);
-        current = atof(&v[2][0]);
-        qDebug() << "meters: " <<meters;
-        qDebug() << "volts: " << volts;
-        qDebug() << "current: " << current;
-        qDebug() << Qt::endl;
-    //                    qDebug() << &v[0][0];
-    //                    qDebug() << &v[1][0];
-    //                    qDebug() << &v[2][0];
-        // *series << QPointF(500, 2.5) << QPointF(-1000, 5) << QPointF(1500, 7.5) << QPointF(-1250, 10);
-        // *series << QPointF(500, 2.5) << QPointF(-1000, 5) << QPointF(1500, 7.5) << QPointF(-1250, 10);
-
-
-        // *series << QPointF(volts, meters);
-        *points1 << QPointF(volts, meters);
-        curve1->setSamples( *points1 );
-        //curve1->attach( ui->mv1 );
-        //
-        *points2 << QPointF(volts, meters);
-        curve2->setSamples( *points2 );
-        //curve2->attach( ui->mv2 );
-        //
-        *points3 << QPointF(volts, meters);
-        curve3->setSamples( *points3 );
-
-        //QTextStream stream( &file );
-        stream << volts <<"," << meters << Qt::endl;
-    }
-}
-*/
 
 /*
  *Actualiza una nueva escala de acuerdo a lo ingresado en recorrido
 */
 void MainWindow::on_recorrido_editingFinished()
 {
+    /*
     double recorrido = ui->recorrido->value();
 
     ui->mv1->setAxisScale(QwtPlot::yLeft,recorrido,0,10);
     ui->mv2->setAxisScale(QwtPlot::yLeft,recorrido,0,10);
     ui->mv3->setAxisScale(QwtPlot::yLeft,recorrido,0,10);
-    //
+    */
 }
 
 /*
@@ -496,6 +386,7 @@ void MainWindow::on_doubleSpinBox_editingFinished()
 void MainWindow::on_intervalo_editingFinished()
 {
     //
+    /*
     double intervalo = ui->intervalo->value();
 
     char str[10];
@@ -519,6 +410,7 @@ void MainWindow::on_intervalo_editingFinished()
 
     qDebug() << "write usb: intervalo" <<str;
     usbCDC->write(str);
+    */
 }
 
 //#define USB_DATACODE_START 'S'
@@ -535,5 +427,44 @@ void MainWindow::on_pushButton_clicked()
 //    buff[0] = USB_DATACODE_START;
 //    buff[1] = '\0';
     usbCDC->write("@S\r");
+}
+
+/*
+ * Autoscale: afecta las "y" de las 3 graficas
+ */
+void MainWindow::on_autoscale_clicked()
+{
+    ui->mv1->setAxisScale(QwtPlot::yLeft,posicion,0,10);
+    ui->mv2->setAxisScale(QwtPlot::yLeft,posicion,0,10);
+    ui->mv3->setAxisScale(QwtPlot::yLeft,posicion,0,10);
+}
+
+
+void MainWindow::on_generator_toggled(bool checked)
+{
+    char str[10];
+
+    str[0] = USB_DATACODE_TOKEN_BEGIN;
+    str[2] = USB_DATACODE_TOKEN_END;
+    str[3] = '\0';
+
+    QPalette pal = ui->generator->palette();
+    if (checked == true)
+    {
+        pal.setColor(QPalette::Button, QColor(Qt::green));
+        str[1] = USB_DATACODE_OUT2_ON;
+    }
+    else
+    {
+        pal.setColor(QPalette::Button, QColor(Qt::gray));
+        str[1] = USB_DATACODE_OUT2_OFF;
+    }
+    usbCDC->write(str);
+    //
+    ui->generator->setAutoFillBackground(true);
+    ui->generator->setPalette(pal);
+    ui->generator->update();
+
+
 }
 
