@@ -2,20 +2,31 @@
 #include "ui_mainwindow.h"
 #include "ledindicator.h"
 
-QFile file("data.csv");
-QTextStream stream( &file);
+QFile file_export_mv1("mv1.csv");
+QTextStream stream_export_mv1( &file_export_mv1);
+
+QFile file_export_mv2mv3("mv2mv3.csv");
+QTextStream stream_export_mv2mv3( &file_export_mv2mv3);
 
 void MainWindow::file2export(void)
 {
     //if (!file.open(QIODevice::WriteOnly | QIODevice::Append ) )
-    if (!file.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
+    if (!file_export_mv1.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
     {
-        QMessageBox::warning(this, "Error", "No se puede crear el archivo");
+        QMessageBox::warning(this, "Error", "No se puede crear el archivo mv1.csv");
     }
     else
     {
-        //write Header csv file
-        stream <<"MV1(mV),RECORRIDO(m),MV2(mV),CORRIENTE(mA),RECORRIDO(m),MV3(mV),CORRIENTE(mA),RECORRIDO(m)"<<Qt::endl;
+        stream_export_mv1 <<"POSICION(metros),MV1(mV)"<<Qt::endl;
+    }
+    //
+    if (!file_export_mv2mv3.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
+    {
+        QMessageBox::warning(this, "Error", "No se puede crear el archivo mv2mv3.csv");
+    }
+    else
+    {
+        stream_export_mv2mv3 <<"POSICION(metros),MV2(mV),MV3(mV),CORRIENTE(mV)"<<Qt::endl;
     }
     //file.close();
 }
@@ -96,9 +107,10 @@ void MainWindow::initChart(void)
     curve1->setPen( Qt::blue, 2 ),
     curve1->setRenderHint( QwtPlotItem::RenderAntialiased, true );
 
-    QwtSymbol *symbol1 = new QwtSymbol( QwtSymbol::Ellipse,
-      QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
-    curve1->setSymbol( symbol1 );
+    //sin el simbolo de punto redondo
+//    QwtSymbol *symbol1 = new QwtSymbol( QwtSymbol::Ellipse,
+//      QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
+//    curve1->setSymbol( symbol1 );
 
     //QPolygonF points;
    points1 = new QPolygonF;
@@ -123,9 +135,10 @@ void MainWindow::initChart(void)
     curve2->setPen( Qt::red, 2 ),
     curve2->setRenderHint( QwtPlotItem::RenderAntialiased, true );
 
-    QwtSymbol *symbol2 = new QwtSymbol( QwtSymbol::Ellipse,
-      QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
-    curve2->setSymbol( symbol2 );
+    //sin el simbolo de punto redondo
+//    QwtSymbol *symbol2 = new QwtSymbol( QwtSymbol::Ellipse,
+//      QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
+//    curve2->setSymbol( symbol2 );
 
     //QPolygonF points;
     points2 = new QPolygonF;
@@ -146,9 +159,10 @@ void MainWindow::initChart(void)
     curve3->setPen( Qt::green, 2 ),
     curve3->setRenderHint( QwtPlotItem::RenderAntialiased, true );
 
-    QwtSymbol *symbol3 = new QwtSymbol( QwtSymbol::Ellipse,
-      QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
-    curve3->setSymbol( symbol3 );
+    //sin el simbolo de punto redondo
+//    QwtSymbol *symbol3 = new QwtSymbol( QwtSymbol::Ellipse,
+//      QBrush( Qt::yellow ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
+//    curve3->setSymbol( symbol3 );
 
     //QPolygonF points;
     points3 = new QPolygonF;
@@ -212,7 +226,8 @@ MainWindow::~MainWindow()
         usbCDC->close();
     }
 
-    file.close();
+    file_export_mv1.close();
+    file_export_mv2mv3.close();
 }
 
 /* Final USB rx
@@ -220,14 +235,11 @@ MainWindow::~MainWindow()
  */
 
 QString str_acc = "";
-//float recorrido = 0;
 float posicion = 0;
 float current = 0;  //el uC envia en miliamperios, con 2 decimales
 float mv1 = 0;  //el uC envia en milivoltios, con 2 decimales
 float mv2 = 0;  //el uC envia en milivoltios, con 2 decimales
 float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
-//float mv2_current = 0;  //el uC envia en miliamperios, con 2 decimales
-//float mv3_current = 0;  //el uC envia en miliamperios, con 2 decimales
 
 #define USB_DATACODE_MV1 'X'
 #define USB_DATACODE_MV2 'Y'
@@ -313,36 +325,31 @@ void MainWindow::readSerial()
                 mv1 = payload_f;
                 *points1 << QPointF(mv1/1000.0f, posicion);//grafica mv1 en voltios, NO milivoltios
                 curve1->setSamples( *points1 );
-                stream << mv1 <<"," << posicion;
+                stream_export_mv1 << posicion<<"," << mv1 << Qt::endl;
             break;
             case USB_DATACODE_MV2:
                 mv2 = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
-                *points2 << QPointF(mv2/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
-                curve2->setSamples( *points2 );
+//                *points2 << QPointF(mv2/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
+//                curve2->setSamples( *points2 );
              break;
-            case USB_DATACODE_MV3:
+            case USB_DATACODE_MV3://grafica a la misma vez
                 mv3 = payload_f;
+                *points2 << QPointF(mv2/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
                 *points3 << QPointF(mv3/1000.0f, posicion);//grafica mv3 en voltios, NO milivoltios
+                curve2->setSamples( *points2 );
                 curve3->setSamples( *points3 );
+                stream_export_mv2mv3 <<posicion<<"," << mv2 <<"," << mv3 <<","<< current << Qt::endl;
              break;
             case USB_DATACODE_CURRENT:
-                //mv2_current = payload_f * 1000;
-                //sprintf(str,"%.1f", mv2_current);
-                //ui->mv2_current->setText(str);
-
                 current = payload_f;
                 ui->current->setText(USB_payload_char);
-
-                //stream <<"," << mv2 <<"," << current <<","<< posicion;
              break;
 
             case USB_DATACODE_POSICION:
-                //recorrido = payload_f;
                 posicion = payload_f;
                 ui->posicion->setText(USB_payload_char);
-
              break;
-
+        default: break;
         }
     }
 }
