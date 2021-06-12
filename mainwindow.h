@@ -84,6 +84,10 @@ private slots:
 
     void on_captura2_toggled(bool checked);
 
+    void on_exportar_clicked();
+
+    void on_borrar_clicked();
+
 private:
     Ui::MainWindow *ui;
 

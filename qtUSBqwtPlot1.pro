@@ -23,6 +23,10 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
+# Set environment values for Qlibxlsxwriter. You may use default values.
+QLIBXLSXWRITER_PARENTPATH = ./libxlsxwriter/
+include(./Qlibxlsxwriter/Qlibxlsxwriter.pri)
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

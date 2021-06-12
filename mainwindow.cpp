@@ -1,33 +1,51 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ledindicator.h"
+#include <QFileDialog>
+#include <QDateTime>
+#include "libxlsxwriter/include/xlsxwriter.h"
 
-QFile file_export_mv1("mv1.csv");
-QTextStream stream_export_mv1( &file_export_mv1);
+struct mv1_data
+{
+       double posicion;
+       double mv1_voltaje;
+};
+QList<mv1_data> mv1Matrix;
+struct mv2mv3_data
+{
+       double posicion;
+       double mv2_voltaje;
+       double mv3_voltaje;
+       double corriente;
+};
+QList<mv2mv3_data> mv2mv3Matrix;
 
-QFile file_export_mv2mv3("mv2mv3.csv");
-QTextStream stream_export_mv2mv3( &file_export_mv2mv3);
+//CSV
+//QFile file_export_mv1("mv1.csv");
+//QTextStream stream_export_mv1( &file_export_mv1);
+//QFile file_export_mv2mv3("mv2mv3.csv");
+//QTextStream stream_export_mv2mv3( &file_export_mv2mv3);
 
 void MainWindow::file2export(void)
 {
     //if (!file.open(QIODevice::WriteOnly | QIODevice::Append ) )
-    if (!file_export_mv1.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
-    {
-        QMessageBox::warning(this, "Error", "No se puede crear el archivo mv1.csv");
-    }
-    else
-    {
-        stream_export_mv1 <<"POSICION(metros),MV1(mV)"<<Qt::endl;
-    }
-    //
-    if (!file_export_mv2mv3.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
-    {
-        QMessageBox::warning(this, "Error", "No se puede crear el archivo mv2mv3.csv");
-    }
-    else
-    {
-        stream_export_mv2mv3 <<"POSICION(metros),MV2(mV),MV3(mV),CORRIENTE(mV)"<<Qt::endl;
-    }
+//    if (!file_export_mv1.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
+//    {
+//        QMessageBox::warning(this, "Error", "No se puede crear el archivo mv1.csv");
+//    }
+//    else
+//    {
+//        stream_export_mv1 <<"POSICION(metros),MV1(mV)"<<Qt::endl;
+//    }
+//    //
+//    if (!file_export_mv2mv3.open(QIODevice::WriteOnly | QIODevice::WriteOnly ) )
+//    {
+//        QMessageBox::warning(this, "Error", "No se puede crear el archivo mv2mv3.csv");
+//    }
+//    else
+//    {
+//        stream_export_mv2mv3 <<"POSICION(metros),MV2(mV),MV3(mV),CORRIENTE(mV)"<<Qt::endl;
+//    }
     //file.close();
 }
 void MainWindow::usbport(void)
@@ -226,8 +244,8 @@ MainWindow::~MainWindow()
         usbCDC->close();
     }
 
-    file_export_mv1.close();
-    file_export_mv2mv3.close();
+    //file_export_mv1.close();
+    //file_export_mv2mv3.close();
 }
 
 /* Final USB rx
@@ -236,10 +254,12 @@ MainWindow::~MainWindow()
 
 QString str_acc = "";
 float posicion = 0;
-float current = 0;  //el uC envia en miliamperios, con 2 decimales
-float mv1 = 0;  //el uC envia en milivoltios, con 2 decimales
-float mv2 = 0;  //el uC envia en milivoltios, con 2 decimales
-float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
+struct mv1_data mv1data;
+struct mv2mv3_data mv2mv3data;
+//float current = 0;  //el uC envia en miliamperios, con 2 decimales
+//float mv1 = 0;  //el uC envia en milivoltios, con 2 decimales
+//float mv2 = 0;  //el uC envia en milivoltios, con 2 decimales
+//float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
 
 #define USB_DATACODE_MV1 'X'
 #define USB_DATACODE_MV2 'Y'
@@ -262,6 +282,7 @@ float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
 
 #define USB_DATACODE_TOKEN_BEGIN '@'
 #define USB_DATACODE_TOKEN_END '\r'
+
 
 void MainWindow::readSerial()
 {
@@ -322,32 +343,42 @@ void MainWindow::readSerial()
         switch (USB_DATACODE)
         {
            case USB_DATACODE_MV1:
-                mv1 = payload_f;
-                *points1 << QPointF(mv1/1000.0f, posicion);//grafica mv1 en voltios, NO milivoltios
+                mv1data.mv1_voltaje= payload_f;
+                *points1 << QPointF(mv1data.mv1_voltaje/1000.0f, mv1data.posicion);//grafica mv1 en voltios, NO milivoltios
                 curve1->setSamples( *points1 );
-                stream_export_mv1 << posicion<<"," << mv1 << Qt::endl;
+                //stream_export_mv1 << posicion<<"," << mv1 << Qt::endl;
+                mv1Matrix.append(mv1data);
             break;
+
             case USB_DATACODE_MV2:
-                mv2 = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
-//                *points2 << QPointF(mv2/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
+                mv2mv3data.mv2_voltaje = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
+//                *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
 //                curve2->setSamples( *points2 );
              break;
+
             case USB_DATACODE_MV3://grafica a la misma vez
-                mv3 = payload_f;
-                *points2 << QPointF(mv2/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
-                *points3 << QPointF(mv3/1000.0f, posicion);//grafica mv3 en voltios, NO milivoltios
+                mv2mv3data.mv3_voltaje= payload_f;
+                *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv2 en voltios, NO milivoltios
+                *points3 << QPointF(mv2mv3data.mv3_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv3 en voltios, NO milivoltios
                 curve2->setSamples( *points2 );
                 curve3->setSamples( *points3 );
-                stream_export_mv2mv3 <<posicion<<"," << mv2 <<"," << mv3 <<","<< current << Qt::endl;
+                //stream_export_mv2mv3 <<posicion<<"," << mv2 <<"," << mv3 <<","<< current << Qt::endl;
+                mv2mv3Matrix.append(mv2mv3data);
              break;
+
             case USB_DATACODE_CURRENT:
-                current = payload_f;
+                //current = payload_f;
+                mv2mv3data.corriente = payload_f;
                 ui->current->setText(USB_payload_char);
              break;
 
             case USB_DATACODE_POSICION:
                 posicion = payload_f;
+                mv1data.posicion = posicion;
+                mv2mv3data.posicion = posicion;
                 ui->posicion->setText(USB_payload_char);
+                //
+
              break;
         default: break;
         }
@@ -565,5 +596,100 @@ void MainWindow::on_captura2_toggled(bool checked)
     ui->captura2->setAutoFillBackground(true);
     ui->captura2->setPalette(pal);
     ui->captura2->update();
+}
+
+
+void MainWindow::on_exportar_clicked()
+{
+    QString filenameQString_datetimeStamp = QString("%1.xlsx").arg(QDateTime::currentDateTime().toString("ddMMyyyy-hh_mm_ss"));
+    QString filenameQString = "mv1mv2mv3-" + filenameQString_datetimeStamp;
+
+    //Se propone el filenameQString
+    QString fileName2save = QFileDialog::getSaveFileName(this, tr("Save File"),
+                               filenameQString,
+                               tr("Excel (*.xlsx)"));
+
+    //convertir de QString to const char*
+    QByteArray filenameQByteArray = fileName2save.toLocal8Bit();
+    const char *filename = filenameQByteArray.data();
+    //Create a workbook and add a worksheet.
+    lxw_workbook  *workbook  = workbook_new(filename);
+    lxw_worksheet *worksheet_mv1 = workbook_add_worksheet(workbook, "mv1");
+    lxw_worksheet *worksheet_mv2mv3 = workbook_add_worksheet(workbook, "mv2mv3");
+    //
+    int row = 0;
+    int col = 0;
+    struct mv1_data mv1data;
+    struct mv2mv3_data mv2mv3data;
+    //
+    //Escribir en fila 0 la cabecera con los titulos de cada hoja
+    worksheet_write_string (worksheet_mv1, row, col++, "Posicion(metros)",NULL);
+    worksheet_write_string (worksheet_mv1, row, col++, "mV1(mv)",NULL);
+    col = 0;
+    worksheet_write_string (worksheet_mv2mv3, row, col++, "Posicion(metros)",NULL);
+    worksheet_write_string (worksheet_mv2mv3, row, col++, "mV2(mv)",NULL);
+    worksheet_write_string (worksheet_mv2mv3, row, col++, "mV3(mv)",NULL);
+    worksheet_write_string (worksheet_mv2mv3, row, col++, "Corriente(mA)",NULL);
+
+    //Para ambas hojas, se escribe a partir de la fila 1, fila 0 es la cabecera con los titulos
+//    lxw_format    *format01   = workbook_add_format(workbook);
+//      lxw_format    *format02   = workbook_add_format(workbook);
+//      lxw_format    *format03   = workbook_add_format(workbook);
+      lxw_format    *format2dec   = workbook_add_format(workbook);
+      lxw_format    *format3dec   = workbook_add_format(workbook);
+//      lxw_format    *format05   = workbook_add_format(workbook);
+//      lxw_format    *format06   = workbook_add_format(workbook);
+//      lxw_format    *format07   = workbook_add_format(workbook);
+//      lxw_format    *format08   = workbook_add_format(workbook);
+//      lxw_format    *format09   = workbook_add_format(workbook);
+//      lxw_format    *format10   = workbook_add_format(workbook);
+//      lxw_format    *format11   = workbook_add_format(workbook);
+    // Set some example number formats.
+//    format_set_num_format(format01, "0.000");
+//    format_set_num_format(format02, "#,##0");
+//    format_set_num_format(format03, "#,##0.00");
+        format_set_num_format(format2dec, "0.00");
+        format_set_num_format(format3dec, "0.000");
+//    format_set_num_format(format05, "mm/dd/yy");
+//    format_set_num_format(format06, "mmm d yyyy");
+//    format_set_num_format(format07, "d mmmm yyyy");
+//    format_set_num_format(format08, "dd/mm/yyyy hh:mm AM/PM");
+//    format_set_num_format(format09, "0 \"dollar and\" .00 \"cents\"");
+
+    for (row = 0; row < mv1Matrix.count(); row++)
+    {
+        col = 0;
+        mv1data = mv1Matrix.at(row);
+        worksheet_write_number(worksheet_mv1, row+1, col++, mv1data.posicion, format3dec);
+        worksheet_write_number(worksheet_mv1, row+1, col++, mv1data.mv1_voltaje, format2dec);
+    }
+    for (row = 0; row < mv2mv3Matrix.count(); row++)
+    {
+        col = 0;
+        mv2mv3data = mv2mv3Matrix.at(row);
+        worksheet_write_number(worksheet_mv2mv3, row+1, col++,  mv2mv3data.posicion, format3dec);
+        worksheet_write_number(worksheet_mv2mv3, row+1, col++, mv2mv3data.mv2_voltaje, format2dec);
+        worksheet_write_number(worksheet_mv2mv3, row+1, col++, mv2mv3data.mv3_voltaje, format2dec);
+        worksheet_write_number(worksheet_mv2mv3, row+1, col++, mv2mv3data.corriente, format2dec);
+    }
+    workbook_close(workbook);
+}
+
+
+void MainWindow::on_borrar_clicked()
+{
+    //Borra todos los datos de las matrices
+    mv1Matrix.clear();
+    mv2mv3Matrix.clear();
+    //Limpia graficos
+    delete points1;
+    delete points2;
+    delete points3;
+    points1 = new QPolygonF;
+    points2 = new QPolygonF;
+    points3 = new QPolygonF;
+    curve1->setSamples( *points1 );
+    curve2->setSamples( *points2 );
+    curve3->setSamples( *points3 );
 }
 
