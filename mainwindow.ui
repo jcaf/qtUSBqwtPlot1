@@ -78,7 +78,7 @@
    <widget class="QTextEdit" name="posicion">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>20</x>
       <y>120</y>
       <width>91</width>
       <height>41</height>
@@ -95,7 +95,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>20</x>
       <y>280</y>
       <width>151</width>
       <height>131</height>
@@ -161,7 +161,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>20</x>
       <y>100</y>
       <width>131</width>
       <height>17</height>
@@ -174,7 +174,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QGroupBox" name="Datos">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>20</x>
       <y>440</y>
       <width>201</width>
       <height>181</height>
@@ -208,6 +208,9 @@ p, li { white-space: pre-wrap; }
      <property name="text">
       <string>CAPTURA 1</string>
      </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QPushButton" name="captura2">
      <property name="geometry">
@@ -221,13 +224,16 @@ p, li { white-space: pre-wrap; }
      <property name="text">
       <string>CAPTURA 2</string>
      </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QCheckBox" name="amplificarx10">
      <property name="geometry">
       <rect>
        <x>50</x>
        <y>30</y>
-       <width>121</width>
+       <width>131</width>
        <height>23</height>
       </rect>
      </property>
@@ -239,7 +245,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QTextEdit" name="current">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>20</x>
       <y>190</y>
       <width>91</width>
       <height>41</height>
@@ -256,7 +262,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>20</x>
       <y>170</y>
       <width>101</width>
       <height>17</height>
@@ -282,7 +288,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="autoscale">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>150</x>
       <y>120</y>
       <width>71</width>
       <height>41</height>
@@ -295,7 +301,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="generator">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>140</x>
       <y>190</y>
       <width>83</width>
       <height>41</height>

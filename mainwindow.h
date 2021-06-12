@@ -76,6 +76,14 @@ private slots:
 
     void on_generator_toggled(bool checked);
 
+    void on_amplificarx10_stateChanged(int arg1);
+
+    void on_amplificarx10_toggled(bool checked);
+
+    void on_captura1_toggled(bool checked);
+
+    void on_captura2_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 

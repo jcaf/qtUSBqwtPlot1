@@ -101,9 +101,10 @@ void MainWindow::initChart(void)
     curve1->setSymbol( symbol1 );
 
     //QPolygonF points;
-    points1 = new QPolygonF;
-    *points1 << QPointF( 0.0, 0.0 );
-//    *points << QPointF( 0.0, 10 ) << QPointF( 1000, 20 )
+   points1 = new QPolygonF;
+//    *points1 << QPointF( 0.0, 0.0 );//set 0x0
+
+ //    *points << QPointF( 0.0, 10 ) << QPointF( 1000, 20 )
 //      << QPointF( -1000, 30) << QPointF( 1500, 40 )
 //      << QPointF( -1500.0, 50 ) << QPointF( 5.0, 60 );
 
@@ -128,7 +129,7 @@ void MainWindow::initChart(void)
 
     //QPolygonF points;
     points2 = new QPolygonF;
-    *points2 << QPointF( 0.0, 0.0 );
+    //*points2 << QPointF( 0.0, 0.0 );
 
     curve2->setSamples( *points2 );
     curve2->attach( ui->mv2 );
@@ -151,7 +152,7 @@ void MainWindow::initChart(void)
 
     //QPolygonF points;
     points3 = new QPolygonF;
-    *points3 << QPointF( 0.0, 0.0 );
+    //*points3 << QPointF( 0.0, 0.0 );
 
     curve3->setSamples( *points3 );
     curve3->attach( ui->mv3 );
@@ -178,13 +179,28 @@ MainWindow::MainWindow(QWidget *parent)
     ui->gridLayoutLedsCapture->addWidget(led_capture_mv2,2,0);
     ui->gridLayoutLedsCapture->addWidget(led_capture_mv3,3,0);
 
-    //coloring background
+    //generator button -coloring background
     QPalette pal = ui->generator->palette();
     pal.setColor(QPalette::Button, QColor(Qt::gray));
     ui->generator->setAutoFillBackground(true);
     ui->generator->setPalette(pal);
     ui->generator->update();
     //
+    //generator button -coloring background
+    //QPalette
+            pal = ui->captura1->palette();
+    pal.setColor(QPalette::Button, QColor(Qt::gray));
+    ui->captura1->setAutoFillBackground(true);
+    ui->captura1->setPalette(pal);
+    ui->captura1->update();
+
+    //generator button -coloring background
+    //QPalette
+            pal = ui->captura2->palette();
+    pal.setColor(QPalette::Button, QColor(Qt::gray));
+    ui->captura2->setAutoFillBackground(true);
+    ui->captura2->setPalette(pal);
+    ui->captura2->update();
 
 }
 
@@ -206,11 +222,12 @@ MainWindow::~MainWindow()
 QString str_acc = "";
 //float recorrido = 0;
 float posicion = 0;
+float current = 0;  //el uC envia en miliamperios, con 2 decimales
 float mv1 = 0;  //el uC envia en milivoltios, con 2 decimales
 float mv2 = 0;  //el uC envia en milivoltios, con 2 decimales
 float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
-float mv2_current = 0;  //el uC envia en miliamperios, con 2 decimales
-float mv3_current = 0;  //el uC envia en miliamperios, con 2 decimales
+//float mv2_current = 0;  //el uC envia en miliamperios, con 2 decimales
+//float mv3_current = 0;  //el uC envia en miliamperios, con 2 decimales
 
 #define USB_DATACODE_MV1 'X'
 #define USB_DATACODE_MV2 'Y'
@@ -292,57 +309,32 @@ void MainWindow::readSerial()
 
         switch (USB_DATACODE)
         {
-
            case USB_DATACODE_MV1:
-
-                led_capture_mv1->toggle();
-
                 mv1 = payload_f;
                 *points1 << QPointF(mv1/1000.0f, posicion);//grafica mv1 en voltios, NO milivoltios
                 curve1->setSamples( *points1 );
                 stream << mv1 <<"," << posicion;
             break;
             case USB_DATACODE_MV2:
-//                led_capture_mv1->toggle();
-//                led_capture_mv2->toggle();
-
-//                mv2 = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
-//                *points2 << QPointF(mv2/1000.0f, recorrido);//grafica mv2 en voltios, NO milivoltios
-//                curve2->setSamples( *points2 );
+                mv2 = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
+                *points2 << QPointF(mv2/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
+                curve2->setSamples( *points2 );
              break;
             case USB_DATACODE_MV3:
-//                led_capture_mv2->toggle();
-//                led_capture_mv3->toggle();
-
-//                mv3 = payload_f;
-//                *points3 << QPointF(mv3/1000.0f, recorrido);//grafica mv3 en voltios, NO milivoltios
-//                curve3->setSamples( *points3 );
+                mv3 = payload_f;
+                *points3 << QPointF(mv3/1000.0f, posicion);//grafica mv3 en voltios, NO milivoltios
+                curve3->setSamples( *points3 );
              break;
             case USB_DATACODE_CURRENT:
-//                //mv2_current = payload_f * 1000;
-//                //sprintf(str,"%.1f", mv2_current);
-//                //ui->mv2_current->setText(str);
+                //mv2_current = payload_f * 1000;
+                //sprintf(str,"%.1f", mv2_current);
+                //ui->mv2_current->setText(str);
 
-//                mv2_current = payload_f;
-//                ui->mv2_current->setText(USB_payload_char);
+                current = payload_f;
+                ui->current->setText(USB_payload_char);
 
-//                stream <<"," << mv2 <<"," << mv2_current <<","<< recorrido;
+                //stream <<"," << mv2 <<"," << current <<","<< posicion;
              break;
-//            case USB_DATACODE_MV3CURRENT:
-//                //mv3_current = payload_f * 1000;
-//                //sprintf(str,"%.1f", mv3_current);
-//                //ui->mv3_current->setText(str);
-
-
-//                mv3_current = payload_f;
-//                ui->mv3_current->setText(USB_payload_char);
-
-
-//                stream <<"," << mv3 <<"," << mv3_current <<","<< recorrido << Qt::endl;
-
-//                led_capture_mv3->toggle();
-             break;
-            //case USB_DATACODE_RECORRIDO:
 
             case USB_DATACODE_POSICION:
                 //recorrido = payload_f;
@@ -437,13 +429,19 @@ void MainWindow::on_autoscale_clicked()
     ui->mv1->setAxisScale(QwtPlot::yLeft,posicion,0,10);
     ui->mv2->setAxisScale(QwtPlot::yLeft,posicion,0,10);
     ui->mv3->setAxisScale(QwtPlot::yLeft,posicion,0,10);
+
+    *points1 << QPointF( 0.0, posicion );
+    *points2 << QPointF( 0.0, posicion );
+    *points3 << QPointF( 0.0, posicion );
+    curve1->setSamples( *points1 );
+    curve2->setSamples( *points2 );
+    curve3->setSamples( *points3 );
 }
 
 
 void MainWindow::on_generator_toggled(bool checked)
 {
     char str[10];
-
     str[0] = USB_DATACODE_TOKEN_BEGIN;
     str[2] = USB_DATACODE_TOKEN_END;
     str[3] = '\0';
@@ -466,5 +464,99 @@ void MainWindow::on_generator_toggled(bool checked)
     ui->generator->update();
 
 
+}
+
+
+void MainWindow::on_amplificarx10_stateChanged(int arg1)
+{
+}
+
+
+void MainWindow::on_amplificarx10_toggled(bool checked)
+{
+    char str[10];
+    str[0] = USB_DATACODE_TOKEN_BEGIN;
+    str[2] = USB_DATACODE_TOKEN_END;
+    str[3] = '\0';
+
+    if (checked == true)
+    {
+
+        str[1] = USB_DATACODE_AMPLIFICARx10_ON;
+    }
+    else
+    {
+        str[1] = USB_DATACODE_AMPLIFICARx10_OFF;
+
+
+    }
+    usbCDC->write(str);
+    //qDebug()<<str;
+}
+
+/*
+ * ACTIVA OUT1,
+ * captura mv1 @ 500ms
+ */
+void MainWindow::on_captura1_toggled(bool checked)
+{
+    char str[10];
+    str[0] = USB_DATACODE_TOKEN_BEGIN;
+    str[2] = USB_DATACODE_TOKEN_END;
+    str[3] = '\0';
+
+    QPalette pal = ui->captura1->palette();
+    if (checked == true)
+    {
+        pal.setColor(QPalette::Button, QColor(Qt::green));
+        str[1] = USB_DATACODE_CAPTURA1_ON;
+        //
+        led_capture_mv1->setState(true);
+    }
+    else
+    {
+        pal.setColor(QPalette::Button, QColor(Qt::gray));
+        str[1] = USB_DATACODE_CAPTURA1_OFF;
+        //
+        led_capture_mv1->setState(false);
+    }
+    usbCDC->write(str);
+    //
+    ui->captura1->setAutoFillBackground(true);
+    ui->captura1->setPalette(pal);
+    ui->captura1->update();
+
+}
+
+
+void MainWindow::on_captura2_toggled(bool checked)
+{
+    char str[10];
+    str[0] = USB_DATACODE_TOKEN_BEGIN;
+    str[2] = USB_DATACODE_TOKEN_END;
+    str[3] = '\0';
+
+    QPalette pal = ui->captura2->palette();
+    if (checked == true)
+    {
+        pal.setColor(QPalette::Button, QColor(Qt::green));
+        str[1] = USB_DATACODE_CAPTURA2_ON;
+        //
+        led_capture_mv2->setState(true);
+        led_capture_mv3->setState(true);
+    }
+    else
+    {
+        pal.setColor(QPalette::Button, QColor(Qt::gray));
+        str[1] = USB_DATACODE_CAPTURA2_OFF;
+        //
+        led_capture_mv2->setState(false);
+        led_capture_mv3->setState(false);
+    }
+    usbCDC->write(str);
+    //
+    ui->captura2->setAutoFillBackground(true);
+    ui->captura2->setPalette(pal);
+    ui->captura2->update();
 }
 
