@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include "libxlsxwriter/include/xlsxwriter.h"
 
+float mv1_amplifier_K = 1;
 struct mv1_data
 {
        double posicion;
@@ -105,12 +106,23 @@ void MainWindow::usbport(void)
 
 
 }
+#define MV1_AXISX_LIMITE_MIN -1.5
+#define MV1_AXISX_LIMITE_MAX 1.5
+#define MV1_AXISX_STEPSIZE 1.5
+
+#define MV2_AXISX_LIMITE_MIN -1.5
+#define MV2_AXISX_LIMITE_MAX 1.5
+#define MV2_AXISX_STEPSIZE 1.5
+
+#define MV3_AXISX_LIMITE_MIN -1.5
+#define MV3_AXISX_LIMITE_MAX 1.5
+#define MV3_AXISX_STEPSIZE 1.5
 
 void MainWindow::initChart(void)
 {
     ui->mv1->setTitle("mv1");
     ui->mv1->setCanvasBackground(QColor(255,255,255));
-    ui->mv1->setAxisScale(QwtPlot::xBottom,-1500,1500,1500);
+    ui->mv1->setAxisScale(QwtPlot::xBottom,MV1_AXISX_LIMITE_MIN,MV1_AXISX_LIMITE_MAX,MV1_AXISX_STEPSIZE);
     //ui->qwtPlot1->axisScaleEngine(QwtPlot::yLeft)->setAttribute(QwtScaleEngine::Inverted, true);
 
 //    QwtLinearScaleEngine *engine = new QwtLinearScaleEngine();
@@ -144,7 +156,7 @@ void MainWindow::initChart(void)
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ui->mv2->setTitle("mv2");
     ui->mv2->setCanvasBackground(QColor(255,255,255));
-    ui->mv2->setAxisScale(QwtPlot::xBottom,-1500,1500,1500);
+    ui->mv2->setAxisScale(QwtPlot::xBottom,MV2_AXISX_LIMITE_MIN,MV2_AXISX_LIMITE_MAX,MV2_AXISX_STEPSIZE);
     ui->mv2->setAxisScale(QwtPlot::yLeft,150,0,10);
 
     //QwtPlotCurve *curve = new QwtPlotCurve();
@@ -168,7 +180,7 @@ void MainWindow::initChart(void)
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ui->mv3->setTitle("mv3");
     ui->mv3->setCanvasBackground(QColor(255,255,255));
-    ui->mv3->setAxisScale(QwtPlot::xBottom,-1500,1500,1500);
+    ui->mv3->setAxisScale(QwtPlot::xBottom,MV3_AXISX_LIMITE_MIN,MV3_AXISX_LIMITE_MAX, MV3_AXISX_STEPSIZE);
     ui->mv3->setAxisScale(QwtPlot::yLeft,150,0,10);
 
     //QwtPlotCurve *curve = new QwtPlotCurve();
@@ -280,6 +292,9 @@ struct mv2mv3_data mv2mv3data;
 #define USB_DATACODE_OUT2_ON 'J'
 #define USB_DATACODE_OUT2_OFF 'K'
 
+#define USB_DATACODE_MV1_CAPTURA1_END 'L'
+#define USB_DATACODE_MV2MV3_CAPTURA2_END 'M'
+
 #define USB_DATACODE_TOKEN_BEGIN '@'
 #define USB_DATACODE_TOKEN_END '\r'
 
@@ -298,6 +313,7 @@ void MainWindow::readSerial()
     char c;
     int8_t sm0;
     bool newData = false;
+    float payload_f=0;
 
     std::string Cstr = str_acc.toStdString();
     int length = Cstr.length();
@@ -338,12 +354,18 @@ void MainWindow::readSerial()
     }
     if (newData == true)
     {
-        float payload_f = atof(USB_payload_char);
+
+        //float payload_f = atof(USB_payload_char);
 
         switch (USB_DATACODE)
         {
            case USB_DATACODE_MV1:
+                payload_f = atof(USB_payload_char);
                 mv1data.mv1_voltaje= payload_f;
+
+                //Solo a mv1 le afecta el factor de amplifacion x10
+                mv1data.mv1_voltaje *=mv1_amplifier_K;
+
                 *points1 << QPointF(mv1data.mv1_voltaje/1000.0f, mv1data.posicion);//grafica mv1 en voltios, NO milivoltios
                 curve1->setSamples( *points1 );
                 //stream_export_mv1 << posicion<<"," << mv1 << Qt::endl;
@@ -351,12 +373,14 @@ void MainWindow::readSerial()
             break;
 
             case USB_DATACODE_MV2:
+                payload_f = atof(USB_payload_char);
                 mv2mv3data.mv2_voltaje = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
 //                *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
 //                curve2->setSamples( *points2 );
              break;
 
             case USB_DATACODE_MV3://grafica a la misma vez
+                payload_f = atof(USB_payload_char);
                 mv2mv3data.mv3_voltaje= payload_f;
                 *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv2 en voltios, NO milivoltios
                 *points3 << QPointF(mv2mv3data.mv3_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv3 en voltios, NO milivoltios
@@ -368,18 +392,39 @@ void MainWindow::readSerial()
 
             case USB_DATACODE_CURRENT:
                 //current = payload_f;
+                payload_f = atof(USB_payload_char);
                 mv2mv3data.corriente = payload_f;
                 ui->current->setText(USB_payload_char);
              break;
 
             case USB_DATACODE_POSICION:
+                payload_f = atof(USB_payload_char);
+
                 posicion = payload_f;
+                if (posicion <= 0.000f)
+                {
+                    posicion = 0.000f;
+                    ui->posicion->setText("0.000");
+                }
+                else
+                {
+                    ui->posicion->setText(USB_payload_char);
+                }
                 mv1data.posicion = posicion;
                 mv2mv3data.posicion = posicion;
-                ui->posicion->setText(USB_payload_char);
-                //
 
+                //
              break;
+
+            case USB_DATACODE_MV1_CAPTURA1_END:
+                ui->captura1->setChecked(false);
+            break;
+
+            case USB_DATACODE_MV2MV3_CAPTURA2_END:
+                ui->captura2->setChecked(false);
+            break;
+
+
         default: break;
         }
     }
@@ -468,12 +513,20 @@ void MainWindow::on_autoscale_clicked()
     ui->mv2->setAxisScale(QwtPlot::yLeft,posicion,0,10);
     ui->mv3->setAxisScale(QwtPlot::yLeft,posicion,0,10);
 
-    *points1 << QPointF( 0.0, posicion );
-    *points2 << QPointF( 0.0, posicion );
-    *points3 << QPointF( 0.0, posicion );
-    curve1->setSamples( *points1 );
-    curve2->setSamples( *points2 );
-    curve3->setSamples( *points3 );
+    if (mv1Matrix.empty())
+    {
+        *points1 << QPointF( 0.0, posicion );
+        curve1->setSamples( *points1 );
+    }
+    if (mv2mv3Matrix.empty())
+    {
+        *points2 << QPointF( 0.0, posicion );
+        *points3 << QPointF( 0.0, posicion );
+
+        curve2->setSamples( *points2 );
+        curve3->setSamples( *points3 );
+    }
+
 }
 
 
@@ -494,6 +547,7 @@ void MainWindow::on_generator_toggled(bool checked)
     {
         pal.setColor(QPalette::Button, QColor(Qt::gray));
         str[1] = USB_DATACODE_OUT2_OFF;
+        ui->current->setText("0.00");
     }
     usbCDC->write(str);
     //
@@ -512,23 +566,24 @@ void MainWindow::on_amplificarx10_stateChanged(int arg1)
 
 void MainWindow::on_amplificarx10_toggled(bool checked)
 {
-    char str[10];
-    str[0] = USB_DATACODE_TOKEN_BEGIN;
-    str[2] = USB_DATACODE_TOKEN_END;
-    str[3] = '\0';
+//    char str[10];
+//    str[0] = USB_DATACODE_TOKEN_BEGIN;
+//    str[2] = USB_DATACODE_TOKEN_END;
+//    str[3] = '\0';
 
     if (checked == true)
     {
 
-        str[1] = USB_DATACODE_AMPLIFICARx10_ON;
+        mv1_amplifier_K = 10.0;
+        //str[1] = USB_DATACODE_AMPLIFICARx10_ON;
     }
     else
     {
-        str[1] = USB_DATACODE_AMPLIFICARx10_OFF;
-
+        //str[1] = USB_DATACODE_AMPLIFICARx10_OFF;
+        mv1_amplifier_K = 1.0;
 
     }
-    usbCDC->write(str);
+    //usbCDC->write(str);
     //qDebug()<<str;
 }
 
@@ -563,7 +618,6 @@ void MainWindow::on_captura1_toggled(bool checked)
     ui->captura1->setAutoFillBackground(true);
     ui->captura1->setPalette(pal);
     ui->captura1->update();
-
 }
 
 
