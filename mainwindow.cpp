@@ -129,6 +129,8 @@ void MainWindow::initChart(void)
 //    engine->setAttribute(QwtScaleEngine::Inverted, true);
 //    ui->qwtPlot1->setAxisScaleEngine(QwtPlot::yLeft, engine);
 
+
+
     ui->mv1->setAxisScale(QwtPlot::yLeft,150,0,10);
 
     //QwtPlotCurve *curve = new QwtPlotCurve();
@@ -272,6 +274,8 @@ struct mv2mv3_data mv2mv3data;
 //float mv1 = 0;  //el uC envia en milivoltios, con 2 decimales
 //float mv2 = 0;  //el uC envia en milivoltios, con 2 decimales
 //float mv3 = 0;  //el uC envia en milivoltios, con 2 decimales
+bool mv1_captura1_end = false;
+bool mv2mv3_captura2_end = false;
 
 #define USB_DATACODE_MV1 'X'
 #define USB_DATACODE_MV2 'Y'
@@ -297,7 +301,6 @@ struct mv2mv3_data mv2mv3data;
 
 #define USB_DATACODE_TOKEN_BEGIN '@'
 #define USB_DATACODE_TOKEN_END '\r'
-
 
 void MainWindow::readSerial()
 {
@@ -392,9 +395,17 @@ void MainWindow::readSerial()
 
             case USB_DATACODE_CURRENT:
                 //current = payload_f;
-                payload_f = atof(USB_payload_char);
-                mv2mv3data.corriente = payload_f;
-                ui->current->setText(USB_payload_char);
+                if (ui->current-isEnabled())
+                {
+                    payload_f = atof(USB_payload_char);
+                    mv2mv3data.corriente = payload_f;
+                    ui->current->setText(USB_payload_char);
+                }
+                else
+                {
+                    mv2mv3data.corriente = 0.00f;
+                }
+
              break;
 
             case USB_DATACODE_POSICION:
@@ -405,10 +416,30 @@ void MainWindow::readSerial()
                 {
                     posicion = 0.000f;
                     ui->posicion->setText("0.000");
+                    //
+                    ui->captura1->setEnabled(false);
+                    ui->captura2->setEnabled(false);
+                    ui->autoscale->setEnabled(false);
                 }
                 else
                 {
                     ui->posicion->setText(USB_payload_char);
+                    //
+                    ui->autoscale->setEnabled(true);
+                    //
+                    //ui->captura1->setEnabled(true);
+                    //ui->captura2->setEnabled(true);
+
+                    if (!ui->captura1->isChecked())
+                    {
+                        ui->captura2->setEnabled(true);
+                    }
+                    //
+                    if (!ui->captura2->isChecked())
+                    {
+                        ui->captura1->setEnabled(true);
+                    }
+
                 }
                 mv1data.posicion = posicion;
                 mv2mv3data.posicion = posicion;
@@ -418,10 +449,13 @@ void MainWindow::readSerial()
 
             case USB_DATACODE_MV1_CAPTURA1_END:
                 ui->captura1->setChecked(false);
+                mv1_captura1_end = true;
+
             break;
 
             case USB_DATACODE_MV2MV3_CAPTURA2_END:
                 ui->captura2->setChecked(false);
+                mv2mv3_captura2_end = true;
             break;
 
 
@@ -509,26 +543,24 @@ void MainWindow::on_pushButton_clicked()
  */
 void MainWindow::on_autoscale_clicked()
 {
-    ui->mv1->setAxisScale(QwtPlot::yLeft,posicion,0,10);
-    ui->mv2->setAxisScale(QwtPlot::yLeft,posicion,0,10);
-    ui->mv3->setAxisScale(QwtPlot::yLeft,posicion,0,10);
+    ui->mv1->setAxisScale(QwtPlot::yLeft,posicion,0,posicion/4.0f);
+    ui->mv2->setAxisScale(QwtPlot::yLeft,posicion,0,posicion/4.0f);
+    ui->mv3->setAxisScale(QwtPlot::yLeft,posicion,0,posicion/4.0f);
 
     if (mv1Matrix.empty())
     {
-        *points1 << QPointF( 0.0, posicion );
+//        *points1 << QPointF( 0.0, posicion );
         curve1->setSamples( *points1 );
     }
     if (mv2mv3Matrix.empty())
     {
-        *points2 << QPointF( 0.0, posicion );
-        *points3 << QPointF( 0.0, posicion );
+  //      *points2 << QPointF( 0.0, posicion );
+//        *points3 << QPointF( 0.0, posicion );
 
         curve2->setSamples( *points2 );
         curve3->setSamples( *points3 );
     }
-
 }
-
 
 void MainWindow::on_generator_toggled(bool checked)
 {
@@ -548,14 +580,14 @@ void MainWindow::on_generator_toggled(bool checked)
         pal.setColor(QPalette::Button, QColor(Qt::gray));
         str[1] = USB_DATACODE_OUT2_OFF;
         ui->current->setText("0.00");
+        //
+        mv2mv3data.corriente = 0.00f;
     }
     usbCDC->write(str);
     //
     ui->generator->setAutoFillBackground(true);
     ui->generator->setPalette(pal);
     ui->generator->update();
-
-
 }
 
 
@@ -594,6 +626,7 @@ void MainWindow::on_amplificarx10_toggled(bool checked)
 void MainWindow::on_captura1_toggled(bool checked)
 {
     char str[10];
+
     str[0] = USB_DATACODE_TOKEN_BEGIN;
     str[2] = USB_DATACODE_TOKEN_END;
     str[3] = '\0';
@@ -605,6 +638,19 @@ void MainWindow::on_captura1_toggled(bool checked)
         str[1] = USB_DATACODE_CAPTURA1_ON;
         //
         led_capture_mv1->setState(true);
+        //
+        ui->captura2->setEnabled(false);
+
+        if (mv1_captura1_end == true)
+        {
+            mv1_captura1_end = false;
+            //
+            delete points1;
+            points1 = new QPolygonF;
+            //*points1 << QPointF( 0.0, posicion );
+            curve1->setSamples( *points1 );
+        }
+
     }
     else
     {
@@ -612,18 +658,23 @@ void MainWindow::on_captura1_toggled(bool checked)
         str[1] = USB_DATACODE_CAPTURA1_OFF;
         //
         led_capture_mv1->setState(false);
+
+        qDebug()<<"led_capture_mv1->setState(false)" << Qt::endl;
+
     }
     usbCDC->write(str);
     //
     ui->captura1->setAutoFillBackground(true);
     ui->captura1->setPalette(pal);
     ui->captura1->update();
+
 }
 
 
 void MainWindow::on_captura2_toggled(bool checked)
 {
     char str[10];
+
     str[0] = USB_DATACODE_TOKEN_BEGIN;
     str[2] = USB_DATACODE_TOKEN_END;
     str[3] = '\0';
@@ -636,6 +687,22 @@ void MainWindow::on_captura2_toggled(bool checked)
         //
         led_capture_mv2->setState(true);
         led_capture_mv3->setState(true);
+
+        ui->captura1->setEnabled(false);
+        if (mv2mv3_captura2_end == true)
+        {
+            mv2mv3_captura2_end = false;
+            //
+            delete points2;
+            delete points3;
+            points2 = new QPolygonF;
+            points3 = new QPolygonF;
+            //*points2 << QPointF( 0.0, posicion );
+            //*points3 << QPointF( 0.0, posicion );
+            curve2->setSamples( *points2 );
+            curve3->setSamples( *points3 );
+            //
+        }
     }
     else
     {
@@ -650,6 +717,7 @@ void MainWindow::on_captura2_toggled(bool checked)
     ui->captura2->setAutoFillBackground(true);
     ui->captura2->setPalette(pal);
     ui->captura2->update();
+
 }
 
 
@@ -732,18 +800,26 @@ void MainWindow::on_exportar_clicked()
 
 void MainWindow::on_borrar_clicked()
 {
-    //Borra todos los datos de las matrices
-    mv1Matrix.clear();
-    mv2mv3Matrix.clear();
-    //Limpia graficos
-    delete points1;
-    delete points2;
-    delete points3;
-    points1 = new QPolygonF;
-    points2 = new QPolygonF;
-    points3 = new QPolygonF;
-    curve1->setSamples( *points1 );
-    curve2->setSamples( *points2 );
-    curve3->setSamples( *points3 );
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Pregunta", "Desea borrar los datos/gráficos?", QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes)
+    {
+        //Borra todos los datos de las matrices
+        mv1Matrix.clear();
+        mv2mv3Matrix.clear();
+        //Limpia graficos
+        delete points1;
+        delete points2;
+        delete points3;
+        points1 = new QPolygonF;
+        points2 = new QPolygonF;
+        points3 = new QPolygonF;
+        curve1->setSamples( *points1 );
+        curve2->setSamples( *points2 );
+        curve3->setSamples( *points3 );
+    }
+    else
+    {
+    }
 }
 
