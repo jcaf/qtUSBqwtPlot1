@@ -118,6 +118,16 @@ void MainWindow::usbport(void)
 #define MV3_AXISX_LIMITE_MAX 1.5
 #define MV3_AXISX_STEPSIZE 1.5
 
+
+int mv1_width;
+int mv1_heigth;
+
+int mv2_width;
+int mv2_heigth;
+
+int mv3_width;
+int mv3_heigth;
+
 void MainWindow::initChart(void)
 {
     ui->mv1->setTitle("mv1");
@@ -154,6 +164,7 @@ void MainWindow::initChart(void)
 
     curve1->setSamples( *points1 );
     curve1->attach( ui->mv1 );
+
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ui->mv2->setTitle("mv2");
@@ -202,6 +213,18 @@ void MainWindow::initChart(void)
 
     curve3->setSamples( *points3 );
     curve3->attach( ui->mv3 );
+
+    /////////////////////
+    mv1_width = ui->mv1->width();
+    mv1_heigth = ui->mv1->height();
+
+    mv2_width = ui->mv2->width();
+    mv2_heigth = ui->mv2->height();
+
+    mv3_width = ui->mv3->width();
+    mv3_heigth = ui->mv3->height();
+
+
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -823,3 +846,26 @@ void MainWindow::on_borrar_clicked()
     }
 }
 
+#define QMAINWINDOWS_WIDTH 1302
+#define QMAINWINDOWS_HEIGHT 680
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    int mv1w = this->width()*mv1_width/QMAINWINDOWS_WIDTH;
+    int mv1h = this->height()*mv1_heigth/QMAINWINDOWS_HEIGHT;
+
+    ui->mv1->resize(mv1w, mv1h);
+
+    int mv2w = this->width()*mv2_width/QMAINWINDOWS_WIDTH;
+    int mv2h = this->height()*mv2_heigth/QMAINWINDOWS_HEIGHT;
+
+    //ui->mv2->setGeometry(620+mv1w,100, mv2w, mv2h);
+    ui->mv2->resize(mv2w, mv2h );
+
+    int mv3w = this->width()*mv3_width/QMAINWINDOWS_WIDTH;
+    int mv3h = this->height()*mv3_heigth/QMAINWINDOWS_HEIGHT;
+
+    //ui->mv3->setGeometry(620+mv2w,100, mv3w, mv3h);
+    ui->mv3->resize(mv3w, mv3h);
+
+
+}
