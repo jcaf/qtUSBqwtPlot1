@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1302</width>
-    <height>680</height>
+    <width>1307</width>
+    <height>688</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,8 +25,8 @@
      <rect>
       <x>260</x>
       <y>100</y>
-      <width>311</width>
-      <height>511</height>
+      <width>310</width>
+      <height>510</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -43,7 +43,7 @@
     <property name="geometry">
      <rect>
       <x>100</x>
-      <y>20</y>
+      <y>10</y>
       <width>241</width>
       <height>41</height>
      </rect>
@@ -66,8 +66,8 @@
      <rect>
       <x>620</x>
       <y>100</y>
-      <width>311</width>
-      <height>511</height>
+      <width>310</width>
+      <height>510</height>
      </rect>
     </property>
     <property name="autoReplot">
@@ -77,10 +77,10 @@
    <widget class="QwtPlot" name="mv3">
     <property name="geometry">
      <rect>
-      <x>970</x>
+      <x>980</x>
       <y>100</y>
-      <width>311</width>
-      <height>511</height>
+      <width>310</width>
+      <height>510</height>
      </rect>
     </property>
     <property name="autoReplot">
@@ -335,13 +335,29 @@ p, li { white-space: pre-wrap; }
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QLabel" name="status">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>60</y>
+      <width>351</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Status:</string>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1302</width>
+     <width>1307</width>
      <height>22</height>
     </rect>
    </property>

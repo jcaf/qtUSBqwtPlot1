@@ -15,6 +15,7 @@ class LedIndicator: public QWidget {
     void setOffPattern(Qt::BrushStyle offPattern);
     void setLedSize(int size);
 
+
   public slots:
     void switchLedIndicator();
   protected:
@@ -26,6 +27,7 @@ class LedIndicator: public QWidget {
     Qt::BrushStyle ledOnPattern;
     Qt::BrushStyle ledOffPattern;
     int ledSize;
+
 };
 
 #endif // LEDINDICATOR_H

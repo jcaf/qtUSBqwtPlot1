@@ -106,5 +106,6 @@ private:
     LedIndicator *led_capture_mv1;
     LedIndicator *led_capture_mv2;
     LedIndicator *led_capture_mv3;
+    void USB_commands(char USB_DATACODE, char *USB_payload_char );
 };
 #endif // MAINWINDOW_H

@@ -98,10 +98,14 @@ void MainWindow::usbport(void)
         usbCDC->setFlowControl(QSerialPort::NoFlowControl);
         //
         QObject::connect(usbCDC, SIGNAL(readyRead()), this, SLOT(readSerial()));
+
+        ui->status->setText("Conexión OK: Tarjeta de control encontrado");
     }
     else
     {
         QMessageBox::warning(this, "Port error", "Tarjeta de control no encontrado");
+        ui->status->setText("Port error, Tarjeta de control no encontrado");
+
     }
 
 
@@ -118,7 +122,7 @@ void MainWindow::usbport(void)
 #define MV3_AXISX_LIMITE_MAX 1.5
 #define MV3_AXISX_STEPSIZE 1.5
 
-
+int mv1_position_x;
 int mv1_width;
 int mv1_heigth;
 
@@ -217,6 +221,7 @@ void MainWindow::initChart(void)
     /////////////////////
     mv1_width = ui->mv1->width();
     mv1_heigth = ui->mv1->height();
+    mv1_position_x = ui->mv1->x();
 
     mv2_width = ui->mv2->width();
     mv2_heigth = ui->mv2->height();
@@ -227,11 +232,19 @@ void MainWindow::initChart(void)
 
 }
 
+int QMAINWINDOWS_WIDTH;
+int QMAINWINDOWS_HEIGHT;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    QMAINWINDOWS_WIDTH = this->size().width();
+    QMAINWINDOWS_HEIGHT = this->size().height();
+
+
     usbport();
     initChart();
     file2export();
@@ -270,7 +283,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->captura2->setAutoFillBackground(true);
     ui->captura2->setPalette(pal);
     ui->captura2->update();
-
 }
 
 MainWindow::~MainWindow()
@@ -325,26 +337,138 @@ bool mv2mv3_captura2_end = false;
 #define USB_DATACODE_TOKEN_BEGIN '@'
 #define USB_DATACODE_TOKEN_END '\r'
 
+
+void MainWindow::USB_commands(char USB_DATACODE, char *USB_payload_char )
+{
+    float payload_f;// = atof(USB_payload_char);
+
+    switch (USB_DATACODE)
+    {
+       case USB_DATACODE_MV1:
+            payload_f = atof(USB_payload_char);
+            mv1data.mv1_voltaje= payload_f;
+
+            //Solo a mv1 le afecta el factor de amplifacion x10
+            mv1data.mv1_voltaje *=mv1_amplifier_K;
+
+            *points1 << QPointF(mv1data.mv1_voltaje/1000.0f, mv1data.posicion);//grafica mv1 en voltios, NO milivoltios
+            curve1->setSamples( *points1 );
+            //stream_export_mv1 << posicion<<"," << mv1 << Qt::endl;
+            mv1Matrix.append(mv1data);
+        break;
+
+        case USB_DATACODE_MV2:
+            payload_f = atof(USB_payload_char);
+            mv2mv3data.mv2_voltaje = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
+//                *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
+//                curve2->setSamples( *points2 );
+         break;
+
+        case USB_DATACODE_MV3://grafica a la misma vez
+            payload_f = atof(USB_payload_char);
+            mv2mv3data.mv3_voltaje= payload_f;
+            *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv2 en voltios, NO milivoltios
+            *points3 << QPointF(mv2mv3data.mv3_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv3 en voltios, NO milivoltios
+            curve2->setSamples( *points2 );
+            curve3->setSamples( *points3 );
+            //stream_export_mv2mv3 <<posicion<<"," << mv2 <<"," << mv3 <<","<< current << Qt::endl;
+            mv2mv3Matrix.append(mv2mv3data);
+         break;
+
+        case USB_DATACODE_CURRENT:
+            //current = payload_f;
+            //qDebug() << "current: " <<atof(USB_payload_char) << Qt::endl;
+
+            if (ui->current-isEnabled())
+            {
+                payload_f = atof(USB_payload_char);
+                mv2mv3data.corriente = payload_f;
+                ui->current->setText(USB_payload_char);
+            }
+            else
+            {
+                mv2mv3data.corriente = 0.00f;
+            }
+
+         break;
+
+        case USB_DATACODE_POSICION:
+            payload_f = atof(USB_payload_char);
+
+            //qDebug() << "posicion: " <<payload_f << Qt::endl;
+
+            posicion = payload_f;
+            if (posicion <= 0.000f)
+            {
+                posicion = 0.000f;
+                ui->posicion->setText("0.000");
+                //
+                ui->captura1->setEnabled(false);
+                ui->captura2->setEnabled(false);
+                ui->autoscale->setEnabled(false);
+            }
+            else
+            {
+                ui->posicion->setText(USB_payload_char);
+                //
+                ui->autoscale->setEnabled(true);
+                //
+                //ui->captura1->setEnabled(true);
+                //ui->captura2->setEnabled(true);
+
+                if (!ui->captura1->isChecked())
+                {
+                    ui->captura2->setEnabled(true);
+                }
+                //
+                if (!ui->captura2->isChecked())
+                {
+                    ui->captura1->setEnabled(true);
+                }
+
+            }
+            mv1data.posicion = posicion;
+            mv2mv3data.posicion = posicion;
+
+            //
+         break;
+
+        case USB_DATACODE_MV1_CAPTURA1_END:
+            ui->captura1->setChecked(false);
+            mv1_captura1_end = true;
+
+        break;
+
+        case USB_DATACODE_MV2MV3_CAPTURA2_END:
+            ui->captura2->setChecked(false);
+            mv2mv3_captura2_end = true;
+        break;
+
+
+    default: break;
+    }
+
+}
+//int yy;
 void MainWindow::readSerial()
 {
     QByteArray serialBuff = usbCDC->readAll();
     QString str_payload = QString::fromStdString(serialBuff.toStdString());
-    str_acc += str_payload;         //va acumulando y formando el string
-
-    qDebug()<< str_acc;
+    //str_acc += str_payload;         //va acumulando y formando el string
+    str_acc = str_payload;         //va acumulando y formando el string
+    //qDebug()<< "str_acc:"<<++yy<<" - "<<str_acc<<Qt::endl;
 
     char USB_DATACODE;
     char USB_payload_char[30];
-    int8_t USB_payload_idx=0;
     char c;
-    int8_t sm0;
-    bool newData = false;
-    float payload_f=0;
+
+    static int8_t USB_payload_idx;
+    static int8_t sm0;
 
     std::string Cstr = str_acc.toStdString();
     int length = Cstr.length();
 
-    sm0 = 0;
+    //sm0 = 0;
     for (int i=0; i< length; i++)
     {
         c =  Cstr[i];
@@ -367,10 +491,13 @@ void MainWindow::readSerial()
             {
                 USB_payload_char[USB_payload_idx] = '\0';
                 //
-                str_acc = "";
+                //str_acc = "";
+                //str_acc.clear();
+
                 sm0 = 0;
-                newData = true;
-                break;
+                //newData = true;
+                //break;
+                USB_commands(USB_DATACODE, USB_payload_char);
             }
             else
             {
@@ -378,113 +505,7 @@ void MainWindow::readSerial()
             }
         }
     }
-    if (newData == true)
-    {
 
-        //float payload_f = atof(USB_payload_char);
-
-        switch (USB_DATACODE)
-        {
-           case USB_DATACODE_MV1:
-                payload_f = atof(USB_payload_char);
-                mv1data.mv1_voltaje= payload_f;
-
-                //Solo a mv1 le afecta el factor de amplifacion x10
-                mv1data.mv1_voltaje *=mv1_amplifier_K;
-
-                *points1 << QPointF(mv1data.mv1_voltaje/1000.0f, mv1data.posicion);//grafica mv1 en voltios, NO milivoltios
-                curve1->setSamples( *points1 );
-                //stream_export_mv1 << posicion<<"," << mv1 << Qt::endl;
-                mv1Matrix.append(mv1data);
-            break;
-
-            case USB_DATACODE_MV2:
-                payload_f = atof(USB_payload_char);
-                mv2mv3data.mv2_voltaje = payload_f;    //mv1, mv2 y mv3 se graban en archivo en milivoltios
-//                *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, posicion);//grafica mv2 en voltios, NO milivoltios
-//                curve2->setSamples( *points2 );
-             break;
-
-            case USB_DATACODE_MV3://grafica a la misma vez
-                payload_f = atof(USB_payload_char);
-                mv2mv3data.mv3_voltaje= payload_f;
-                *points2 << QPointF(mv2mv3data.mv2_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv2 en voltios, NO milivoltios
-                *points3 << QPointF(mv2mv3data.mv3_voltaje/1000.0f, mv2mv3data.posicion);//grafica mv3 en voltios, NO milivoltios
-                curve2->setSamples( *points2 );
-                curve3->setSamples( *points3 );
-                //stream_export_mv2mv3 <<posicion<<"," << mv2 <<"," << mv3 <<","<< current << Qt::endl;
-                mv2mv3Matrix.append(mv2mv3data);
-             break;
-
-            case USB_DATACODE_CURRENT:
-                //current = payload_f;
-                if (ui->current-isEnabled())
-                {
-                    payload_f = atof(USB_payload_char);
-                    mv2mv3data.corriente = payload_f;
-                    ui->current->setText(USB_payload_char);
-                }
-                else
-                {
-                    mv2mv3data.corriente = 0.00f;
-                }
-
-             break;
-
-            case USB_DATACODE_POSICION:
-                payload_f = atof(USB_payload_char);
-
-                posicion = payload_f;
-                if (posicion <= 0.000f)
-                {
-                    posicion = 0.000f;
-                    ui->posicion->setText("0.000");
-                    //
-                    ui->captura1->setEnabled(false);
-                    ui->captura2->setEnabled(false);
-                    ui->autoscale->setEnabled(false);
-                }
-                else
-                {
-                    ui->posicion->setText(USB_payload_char);
-                    //
-                    ui->autoscale->setEnabled(true);
-                    //
-                    //ui->captura1->setEnabled(true);
-                    //ui->captura2->setEnabled(true);
-
-                    if (!ui->captura1->isChecked())
-                    {
-                        ui->captura2->setEnabled(true);
-                    }
-                    //
-                    if (!ui->captura2->isChecked())
-                    {
-                        ui->captura1->setEnabled(true);
-                    }
-
-                }
-                mv1data.posicion = posicion;
-                mv2mv3data.posicion = posicion;
-
-                //
-             break;
-
-            case USB_DATACODE_MV1_CAPTURA1_END:
-                ui->captura1->setChecked(false);
-                mv1_captura1_end = true;
-
-            break;
-
-            case USB_DATACODE_MV2MV3_CAPTURA2_END:
-                ui->captura2->setChecked(false);
-                mv2mv3_captura2_end = true;
-            break;
-
-
-        default: break;
-        }
-    }
 }
 
 
@@ -846,8 +867,8 @@ void MainWindow::on_borrar_clicked()
     }
 }
 
-#define QMAINWINDOWS_WIDTH 1302
-#define QMAINWINDOWS_HEIGHT 680
+//#define QMAINWINDOWS_WIDTH 1302
+//#define QMAINWINDOWS_HEIGHT 680
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     int mv1w = this->width()*mv1_width/QMAINWINDOWS_WIDTH;
@@ -858,14 +879,14 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     int mv2w = this->width()*mv2_width/QMAINWINDOWS_WIDTH;
     int mv2h = this->height()*mv2_heigth/QMAINWINDOWS_HEIGHT;
 
-    //ui->mv2->setGeometry(620+mv1w,100, mv2w, mv2h);
-    ui->mv2->resize(mv2w, mv2h );
+    ui->mv2->setGeometry(mv1_position_x+50+mv1w,100, mv2w, mv2h);
+    //ui->mv2->resize(mv2w, mv2h );
 
     int mv3w = this->width()*mv3_width/QMAINWINDOWS_WIDTH;
     int mv3h = this->height()*mv3_heigth/QMAINWINDOWS_HEIGHT;
 
-    //ui->mv3->setGeometry(620+mv2w,100, mv3w, mv3h);
-    ui->mv3->resize(mv3w, mv3h);
+    ui->mv3->setGeometry(mv1_position_x+50+50+mv1w+mv2w,100, mv3w, mv3h);
+    //ui->mv3->resize(mv3w, mv3h);
 
 
 }
