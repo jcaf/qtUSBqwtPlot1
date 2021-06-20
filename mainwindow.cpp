@@ -373,13 +373,16 @@ void MainWindow::USB_commands(char USB_DATACODE, char *USB_payload_char )
             curve3->setSamples( *points3 );
             //stream_export_mv2mv3 <<posicion<<"," << mv2 <<"," << mv3 <<","<< current << Qt::endl;
             mv2mv3Matrix.append(mv2mv3data);
+
+
+            //qDebug()<<"USB_DATACODE_MV3 recibido -------------+++++++++++++" << Qt::endl;
          break;
 
         case USB_DATACODE_CURRENT:
             //current = payload_f;
             //qDebug() << "current: " <<atof(USB_payload_char) << Qt::endl;
 
-            if (ui->current-isEnabled())
+            if (ui->generator->isChecked())
             {
                 payload_f = atof(USB_payload_char);
                 mv2mv3data.corriente = payload_f;
@@ -449,14 +452,14 @@ void MainWindow::USB_commands(char USB_DATACODE, char *USB_payload_char )
     }
 
 }
-//int yy;
+int yy;
 void MainWindow::readSerial()
 {
     QByteArray serialBuff = usbCDC->readAll();
     QString str_payload = QString::fromStdString(serialBuff.toStdString());
     //str_acc += str_payload;         //va acumulando y formando el string
     str_acc = str_payload;         //va acumulando y formando el string
-    //qDebug()<< "str_acc:"<<++yy<<" - "<<str_acc<<Qt::endl;
+    qDebug()<< "str_acc:"<<++yy<<" - "<<str_acc<<Qt::endl;
 
     char USB_DATACODE;
     char USB_payload_char[30];
@@ -623,9 +626,10 @@ void MainWindow::on_generator_toggled(bool checked)
     {
         pal.setColor(QPalette::Button, QColor(Qt::gray));
         str[1] = USB_DATACODE_OUT2_OFF;
-        ui->current->setText("0.00");
+
         //
         mv2mv3data.corriente = 0.00f;
+        ui->current->setText("0.00");
     }
     usbCDC->write(str);
     //
@@ -691,10 +695,9 @@ void MainWindow::on_captura1_toggled(bool checked)
             //
             delete points1;
             points1 = new QPolygonF;
-            //*points1 << QPointF( 0.0, posicion );
+// *points1 << QPointF( 0.0, posicion );
             curve1->setSamples( *points1 );
         }
-
     }
     else
     {
@@ -703,14 +706,13 @@ void MainWindow::on_captura1_toggled(bool checked)
         //
         led_capture_mv1->setState(false);
 
-        qDebug()<<"led_capture_mv1->setState(false)" << Qt::endl;
-
     }
     usbCDC->write(str);
     //
     ui->captura1->setAutoFillBackground(true);
     ui->captura1->setPalette(pal);
     ui->captura1->update();
+    //qDebug()<<"USB str" << QString((char*)str)  << Qt::endl;
 
 }
 
@@ -741,12 +743,15 @@ void MainWindow::on_captura2_toggled(bool checked)
             delete points3;
             points2 = new QPolygonF;
             points3 = new QPolygonF;
-            //*points2 << QPointF( 0.0, posicion );
-            //*points3 << QPointF( 0.0, posicion );
+
+//*points2 << QPointF( 0.0, posicion );
+//*points3 << QPointF( 0.0, posicion );
+
             curve2->setSamples( *points2 );
             curve3->setSamples( *points3 );
             //
         }
+
     }
     else
     {
@@ -755,6 +760,8 @@ void MainWindow::on_captura2_toggled(bool checked)
         //
         led_capture_mv2->setState(false);
         led_capture_mv3->setState(false);
+
+
     }
     usbCDC->write(str);
     //
@@ -762,6 +769,7 @@ void MainWindow::on_captura2_toggled(bool checked)
     ui->captura2->setPalette(pal);
     ui->captura2->update();
 
+    //qDebug()<<"USB str" << QString((char*)str)  << Qt::endl;
 }
 
 
